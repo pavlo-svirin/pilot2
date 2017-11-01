@@ -107,53 +107,15 @@ def get_asetup(asetup=True):
         cmd += "source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet;"
         if asetup:
             cmd += "source $AtlasSetup/scripts/asetup.sh"
-    else:
-        appdir = get_appdir()
-        if appdir == "":
-            appdir = os.environ.get('VO_ATLAS_SW_DIR', '')
-        if appdir != "":
-            if asetup:
-                cmd = "source %s/scripts/asetup.sh" % appdir
+        else:
+            appdir = get_appdir()
+            if appdir == "":
+                appdir = os.environ.get('VO_ATLAS_SW_DIR', '')
+            if appdir != "":
+                if asetup:
+                    cmd = "source %s/scripts/asetup.sh" % appdir
 
     return cmd
-
-
-def get_asetup_options(release, homepackage):
-    """
-    Determine the proper asetup options.
-    :param release: ATLAS release string.
-    :param homepackage: ATLAS homePackage string.
-    :return: asetup options (string).
-    """
-
-    asetupopt = []
-    release = re.sub('^Atlas-', '', release)
-
-    # is it a user analysis homePackage?
-    if 'AnalysisTransforms' in homepackage:
-
-        _homepackage = re.sub('^AnalysisTransforms-*', '', homepackage)
-        if _homepackage == '' or re.search('^\d+\.\d+\.\d+$', release) is None:
-            if release != "":
-                asetupopt.append(release)
-        if _homepackage != '':
-            asetupopt += _homepackage.split('_')
-
-    else:
-
-        asetupopt += homepackage.split('/')
-        if release not in homepackage:
-            asetupopt.append(release)
-
-    # Add the notest,here for all setups (not necessary for late releases but harmless to add)
-    asetupopt.append('notest')
-    # asetupopt.append('here')
-
-    # Add the fast option if possible (for the moment, check for locally defined env variable)
-    if "ATLAS_FAST_ASETUP" in os.environ:
-        asetupopt.append('fast')
-
-    return ','.join(asetupopt)
 
 
 def is_standard_atlas_job(release):
@@ -166,3 +128,4 @@ def is_standard_atlas_job(release):
     """
 
     return release.startswith('Atlas-')
+
