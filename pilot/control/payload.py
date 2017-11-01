@@ -113,7 +113,78 @@ def set_time_consumed(t_tuple):
     cpu_consumption_unit = "s"  # used to be "kSI2kseconds"
     cpu_consumption_time = int(t_tot * cpu_conversion_factor)
 
-    return cpu_consumption_unit, cpu_consumption_time, cpu_conversion_factor
+def run_payload(job, out, err):
+    """
+    (add description)
+
+    :param job:
+    :param out:
+    :param err:
+    :return:
+    """
+    log = logger.getChild(str(job['PandaID']))
+
+    # get the payload command from the user specific code
+    # cmd = get_payload_command(job)
+    athena_version = job['homepackage'].split('/')[1]
+    asetup = 'source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh --quiet; '\
+             'source $AtlasSetup/scripts/asetup.sh %s,here; ' % athena_version
+    cmd = job['transformation'] + ' ' + job['jobPars']
+
+    log.debug('executable=%s' % asetup + cmd)
+
+    try:
+        proc = subprocess.Popen(asetup + cmd,
+                                bufsize=-1,
+                                stdout=out,
+                                stderr=err,
+                                cwd=job['working_dir'],
+                                shell=True)
+    except Exception as e:
+        log.error('could not execute: %s' % str(e))
+        return None
+
+    log.info('started -- pid=%s executable=%s' % (proc.pid, asetup + cmd))
+
+    return proc
+
+
+def wait_graceful(args, proc, job):
+    """
+    (add description)
+
+    :param args:
+    :param proc:
+    :param job:
+    :return:
+    """
+    log = logger.getChild(str(job['PandaID']))
+
+    breaker = False
+    exit_code = None
+    while True:
+        for i in xrange(100):
+            if args.graceful_stop.is_set():
+                breaker = True
+                log.debug('breaking -- sending SIGTERM pid=%s' % proc.pid)
+                proc.terminate()
+                break
+            time.sleep(0.1)
+        if breaker:
+            log.debug('breaking -- sleep 3s before sending SIGKILL pid=%s' % proc.pid)
+            time.sleep(3)
+            proc.kill()
+            break
+
+        exit_code = proc.poll()
+        log.info('running: pid=%s exit_code=%s' % (proc.pid, exit_code))
+        if exit_code is not None:
+            break
+        else:
+            send_state(job, args, 'running')
+            continue
+
+    return exit_code
 
 
 def execute_payloads(queues, traces, args):
