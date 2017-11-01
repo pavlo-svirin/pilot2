@@ -211,6 +211,26 @@ def get_appdir():
     return get_field_value('appdir')
 
 
+def get_catchall():
+    """
+    Return the catchall field value from the schedconfig queuedata.
+
+    :return: catchall field value (string).
+    """
+
+    return get_field_value('catchall')
+
+
+def get_cmtconfig():
+    """
+    Return the cmtconfig field value from the schedconfig queuedata.
+
+    :return: cmtconfig field value (string).
+    """
+
+    return get_field_value('cmtconfig')
+
+
 def get_container_options():
     """
     Return the container_options field value from the schedconfig queuedata.
@@ -229,21 +249,6 @@ def get_container_type():
     """
 
     return get_field_value('container_type')
-
-
-def get_timefloor():
-    """
-    Return the catchall field value from the schedconfig queuedata.
-
-    :return: timefloor field value (integer, seconds).
-    """
-
-    try:
-        timefloor = int(get_field_value('timefloor')) * 60
-    except TypeError:
-        timefloor = 0
-
-    return timefloor
 
 
 def get_field_value(field):
