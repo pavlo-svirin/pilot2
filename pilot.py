@@ -245,15 +245,7 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
-    # Define and set the main harvester control boolean
-    if (args.harvester_workdir != '' or args.harvester_datadir != '' or args.harvester_eventstatusdump != '' or
-            args.harvester_workerattributes != '') and not args.update_server:
-        args.harvester = True
-    else:
-        args.harvester = False
-
     # If requested by the wrapper via a pilot option, create the main pilot workdir and cd into it
-    initdir = getcwd()
     if args.workdir != "":
         mainworkdir = get_pilot_work_dir(args.workdir)
         try:
