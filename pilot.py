@@ -48,12 +48,62 @@ def main():
     return workflow.run(args)
 
 
+# >>> class C:
+# ...     pass
+# >>> c = C()
+# >>> parser = argparse.ArgumentParser()
+# >>> parser.add_argument('--foo')
+# >>> parser.parse_args(args=['--foo', 'BAR'], namespace=c)
+# >>> c.foo
+# 'BAR'
+
 class Args:
-    """
-    Dummy namespace class used to contain pilot arguments.
-    """
     pass
 
+def import_module(**kwargs):
+    """
+    This function allows for importing the pilot code.
+
+    :param kwargs:
+    :return: pilot error code (integer).
+    """
+
+    argument_dictionary = {'-a': kwargs.get('workdir', ''),
+                           '-d': kwargs.get('debug', None),
+                           '-w': kwargs.get('workflow', 'generic'),
+                           '-l': kwargs.get('lifetime', 3600),
+                           '-q': kwargs.get('queue'),  # required
+                           '-r': kwargs.get('resource'),  # required
+                           '-s': kwargs.get('site'),  # required
+                           '-j': kwargs.get('job_label', 'ptest'),  # change default later to 'managed'
+                           '--cacert': kwargs.get('cacert', None),
+                           '--capath': kwargs.get('capath'),
+                           '--url': ''
+                           }
+
+    lifetime = kwargs.get('lifetime', 3600)
+    queue = kwargs.get('queue')  # required
+    resource = kwargs.get('resource')  # required
+    site = kwargs.get('site')  # required
+    job_label = kwargs.get('job_label', 'ptest')  # change default later to 'managed'
+    cacert = kwargs.get('cacert', None)
+    capath = kwargs.get('capath')
+    url = kwargs.get('url', '')
+    port = kwargs.get('port', 25443)
+    config = kwargs.get('config', '')
+    country_group = kwargs.get('country_group', '')
+    working_group = kwargs.get('working_group', '')
+    allow_other_country = kwargs.get('allow_other_country', False)
+    pilot_user = kwargs.get('pilot_user', 'generic')
+
+    args = Args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a')
+    parser.parse_args(args=['-a', kwargs.get('workdir', '')])
+
+    # ..
+
+    return 0
 
 # rename module to pilot2 to avoid conflict in import with pilot directory
 def import_module(**kwargs):
