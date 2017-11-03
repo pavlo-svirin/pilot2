@@ -49,14 +49,17 @@ def main():
 
 
 class Args:
+    """
+    Dummy namespace class used to contain pilot arguments.
+    """
     pass
 
 
-def import_module(**kwargs):
+def pilot(**kwargs):
     """
     This function allows for importing the pilot code.
 
-    :param kwargs:
+    :param kwargs: pilot options (dictionary).
     :return: pilot error code (integer).
     """
 
@@ -85,47 +88,6 @@ def import_module(**kwargs):
     for key, value in argument_dictionary.iteritems():
         parser.add_argument(key)
         parser.parse_args(args=[key, value], namespace=args)
-
-    # call main pilot function
-
-    return 0
-
-# rename module to pilot2 to avoid conflict in import with pilot directory
-def import_module(**kwargs):
-    """
-    This function allows for importing the pilot code.
-
-    :param kwargs: pilot options (dictionary).
-    :return: pilot error code (integer).
-    """
-
-    argument_dictionary = {'-a': kwargs.get('workdir', ''),
-                           '-d': kwargs.get('debug', None),
-                           '-w': kwargs.get('workflow', 'generic'),
-                           '-l': kwargs.get('lifetime', '3600'),
-                           '-q': kwargs.get('queue'),  # required
-                           '-r': kwargs.get('resource'),  # required
-                           '-s': kwargs.get('site'),  # required
-                           '-j': kwargs.get('job_label', 'ptest'),  # change default later to 'managed'
-                           '-i': kwargs.get('version_tag', 'PR'),
-                           '--cacert': kwargs.get('cacert', None),
-                           '--capath': kwargs.get('capath'),
-                           '--url': kwargs.get('url', ''),
-                           '-p': kwargs.get('port', '25443'),
-                           '--config': kwargs.get('config', ''),
-                           '--country-group': kwargs.get('country_group', ''),
-                           '--working-group': kwargs.get('working_group', ''),
-                           '--allow-other-country': kwargs.get('allow_other_country', 'False'),
-                           '--allow-same-user': kwargs.get('allow_same_user', 'True'),
-                           '--pilot-user': kwargs.get('pilot_user', 'generic')
-                           }
-
-    args = Args()
-    parser = argparse.ArgumentParser()
-    for key, value in argument_dictionary.iteritems():
-        print key, value
-        parser.add_argument(key)
-        parser.parse_args(args=[key, value], namespace=args)  # convert back int and bool strings to int and bool??
 
     # call main pilot function
 
