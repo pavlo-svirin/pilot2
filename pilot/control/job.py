@@ -602,101 +602,22 @@ def retrieve(queues, traces, args):
                     time.sleep(1)
             else:
                 logger.info('received job: %s (sleep until the job has finished)' % res['PandaID'])
-
-                # payload environment wants the PandaID to be set, also used below
-                os.environ['PandaID'] = str(res['PandaID'])
-
-                # update dispatcher data for ES (if necessary)
-                res = update_es_dispatcher_data(res)
-
-                # add the job definition to the jobs queue and increase the job counter,
-                # and wait until the job has finished
                 queues.jobs.put(res)
-                jobnumber += 1
-                if args.graceful_stop.is_set():
-                    logger.info('graceful stop is currently set')
-                else:
-                    logger.info('graceful stop is currently not set')
-                while not args.graceful_stop.is_set():
-                    if job_has_finished(queues):
-                        logger.info('graceful stop has been set')
+                # args.graceful_stop.set()
+                # break
+                # logger.info('got job: %s -- sleep 1000s before trying to get another job' % res['PandaID'])
+
+                for i in xrange(1000):
+                    try:
+                        finishedjob = queues.finished_jobs.get(block=True, timeout=1)
+                    except Queue.Empty:
+                        logger.info("(job still running)")
+                        time.sleep(10)
+                        continue
+                    else:
+                        logger.info("job has finished")
                         break
-                    time.sleep(0.5)
-
-
-def job_has_finished(queues):
-    """
-    Has the current payload finished?
-
-    :param queues:
-    :return: True is the payload has finished or failed
-    """
-
-    try:
-        panda_id = int(os.environ.get('PandaID', 0))
-    except TypeError:
-        panda_id = 0
-
-    # is there anything in the finished_jobs queue?
-    finished_queue_snapshot = list(queues.finished_jobs.queue)
-    peek = [s_job for s_job in finished_queue_snapshot if panda_id == s_job['PandaID']]
-    if len(peek) != 0:
-        logger.info("job %d has completed (finished)" % panda_id)
-        return True
-
-    # is there anything in the failed_jobs queue?
-    failed_queue_snapshot = list(queues.failed_jobs.queue)
-    peek = [s_job for s_job in failed_queue_snapshot if panda_id == s_job['PandaID']]
-    if len(peek) != 0:
-        logger.info("job %d has completed (failed)" % panda_id)
-        return True
-
-    return False
-
-
-def job_monitor(queues, traces, args):
-    """
-    Monitoring of job parameters.
-    This function monitors certain job parameters, such as job looping. It also monitors queue activity, specifically
-    if a job has finished or failed and then reports to the server.
-
-    :param queues:
-    :param traces:
-    :param args:
-    :return:
-    """
-
-    while not args.graceful_stop.is_set():
-        # wait a second
-        if args.graceful_stop.wait(1) or args.graceful_stop.is_set():  # 'or' added for 2.6 compatibility reasons
-            break
-
-        job = None
-
-        # check if the job has finished
-        try:
-            job = queues.finished_jobs.get(block=True, timeout=1)
-        except Queue.Empty:
-            # logger.info("(job still running)")
-            pass
-        else:
-            logger.info("job %d has finished" % job['PandaID'])
-
-        # check if the job has failed
-        try:
-            job = queues.failed_jobs.get(block=True, timeout=1)
-        except Queue.Empty:
-            # logger.info("(job still running)")
-            pass
-        else:
-            logger.info("job %d has failed" % job['PandaID'])
-
-        # job has not been defined if it's still running
-        if job:
-            # send final server update
-            if job['state'] == "finished":
-                send_state(job, args, 'finished', xml=dumps(job['fileinfodict']))
-            else:
-                send_state(job, args, 'failed')
-
-            # now ready for the next job (or quit)
+                    if args.graceful_stop.is_set():
+                        logger.info("graceful stop is set")
+                        break
+                    time.sleep(1)
