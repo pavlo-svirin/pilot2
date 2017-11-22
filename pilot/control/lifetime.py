@@ -15,7 +15,7 @@ from pilot.util.config import config
 import logging
 logger = logging.getLogger(__name__)
 
-# NOTE: rename this component and add internal thread monitoring, keep global lifetime monitoring
+# NOTE: rename this component (pilot monitor?) and add internal thread monitoring, keep global lifetime monitoring
 
 
 def log_lifetime(sig, frame, traces):
