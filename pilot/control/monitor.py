@@ -8,11 +8,8 @@
 # - Daniel Drizhuk, d.drizhuk@gmail.com, 2017
 # - Paul Nilsson, paul.nilsson@cern.ch, 2017
 
-# NOTE: this module should deal with non-job related monitoring, such as thread monitoring. Job monitoring should
-#       be the task of the job_monitor thread in the Job component. Job related functions should be moved to the
-#       Job component, with the exception of the heartbeat function.
+# NOTE: this component should be tied to the job, its thread should live and die with the job
 
-import Queue
 import logging
 import os
 from pilot.util.disk import disk_usage
