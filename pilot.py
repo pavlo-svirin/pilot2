@@ -14,8 +14,7 @@ import logging
 import sys
 import threading
 import time
-from os import getcwd, chdir, environ
-from shutil import rmtree
+from os import getcwd, chdir, environ, remove
 
 from pilot.util.constants import SUCCESS, FAILURE, ERRNO_NOJOBS
 from pilot.util.https import https_setup
@@ -244,6 +243,7 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     # If requested by the wrapper via a pilot option, create the main pilot workdir and cd into it
+    initdir = getcwd()
     if args.workdir != "":
         mainworkdir = get_pilot_work_dir(args.workdir)
         try:
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     if initdir != mainworkdir:
         chdir(initdir)
         try:
-            rmtree(mainworkdir)
+            remove(mainworkdir)
         except Exception as e:
             logging.warning("failed to remove %s: %s" % (mainworkdir, e))
         else:
