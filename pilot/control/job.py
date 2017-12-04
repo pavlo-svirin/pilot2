@@ -584,14 +584,6 @@ def retrieve(queues, traces, args):
             logger.info('since timefloor=%d s and only %d s has passed since launch, pilot can run another job' %
                         (timefloor, currenttime - starttime))
 
-        # getjobmaxtime = 60*5 # to be read from configuration file
-        # logger.debug('pilot will attempt job downloads for a maximum of %d seconds' % getjobmaxtime)
-
-    if args.harvester:
-        logger.info('harvester mode: pilot will look for local job definition file(s)')
-
-    while not args.graceful_stop.is_set():
-
         getjob_requests += 1
 
         if not proceed_with_getjob(timefloor, starttime, jobnumber, getjob_requests, args.harvester):
