@@ -19,9 +19,7 @@ from pilot.util import https
 from pilot.util.config import config
 from pilot.util.workernode import get_disk_space, collect_workernode_info, get_node_name
 from pilot.util.proxy import get_distinguished_name
-from pilot.util.auxiliary import time_stamp, get_batchsystem_jobid, get_job_scheduler_id, get_pilot_id
 from pilot.util.information import get_timefloor
-from pilot.util.harvester import request_new_jobs, remove_job_request_file
 
 import logging
 logger = logging.getLogger(__name__)
@@ -561,11 +559,33 @@ def retrieve(queues, traces, args):
     :param args: arguments (e.g. containing queue name, queuedata dictionary, etc).
     """
 
+    # get the job dispatcher dictionary
+    data = get_dispatcher_dictionary(args)
+
     timefloor = get_timefloor()
     starttime = time.time()
 
-    jobnumber = 0  # number of downloaded jobs
-    getjob_requests = 0  # number of getjob requests
+    jobnumber = 0
+    getjob_requests = 0
+    while not args.graceful_stop.is_set():
+
+        currenttime = time.time()
+        if timefloor == 0 and jobnumber > 0:
+            log.warning("since timefloor is set to 0, pilot was only allowed to run one job")
+            args.graceful_stop.set()
+            break
+
+        if currenttime - starttime > timefloor:
+            log.warning("the pilot has run out of time (timefloor=%d has been passed)" % timefloor)
+            args.graceful_stop.set()
+            break
+
+        if jobnumber > 0:
+            log.info('since timefloor=%d s and only %d s has passed since launch, pilot can run another job' %
+                     (timefloor, currenttime - starttime))
+
+        # getjobmaxtime = 60*5 # to be read from configuration file
+        # logger.debug('pilot will attempt job downloads for a maximum of %d seconds' % getjobmaxtime)
 
     if args.harvester:
         logger.info('harvester mode: pilot will look for local job definition file(s)')
@@ -603,10 +623,11 @@ def retrieve(queues, traces, args):
             else:
                 logger.info('received job: %s (sleep until the job has finished)' % res['PandaID'])
                 queues.jobs.put(res)
+                jobnumber += 1
                 while not args.graceful_stop.is_set():
                     if job_has_finished(queues) or args.graceful_stop.is_set():
                         break
-                    time.sleep(1)
+                    time.sleep(0.5)
 
 
 def job_has_finished(queues):
