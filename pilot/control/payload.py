@@ -20,7 +20,6 @@ from collections import defaultdict
 
 from pilot.control.payloads import generic, eventservice
 from pilot.control.job import send_state
-from pilot.util.config import config
 from pilot.util.container import execute
 
 import logging
@@ -125,20 +124,20 @@ def run_payload(job, out, err):
     log = logger.getChild(str(job['PandaID']))
 
     # get the payload command from the user specific code
-    pilot_user = os.environ.get('PILOT_USER', 'generic')
+    pilot_user = os.environ.get('PILOT_USER', 'generic').lower()
     user = __import__('pilot.user.%s' % pilot_user, globals(), locals(), [pilot_user], -1)
     cmd = user.get_payload_command(job)
     log.info("payload execution command: %s" % cmd)
 
-    athena_version = job['homepackage'].split('/')[1]
-    asetup = 'source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh --quiet; '\
-             'source $AtlasSetup/scripts/asetup.sh %s,here; ' % athena_version
-    cmd = job['transformation'] + ' ' + job['jobPars']
+    # athena_version = job['homepackage'].split('/')[1]
+    # asetup = 'source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh --quiet; '\
+    #          'source $AtlasSetup/scripts/asetup.sh %s,here; ' % athena_version
+    # cmd = job['transformation'] + ' ' + job['jobPars']
 
-    log.debug('executable=%s' % asetup + cmd)
+    # log.debug('executable=%s' % asetup + cmd)
 
     try:
-        proc = subprocess.Popen(asetup + cmd,
+        proc = subprocess.Popen(cmd,
                                 bufsize=-1,
                                 stdout=out,
                                 stderr=err,
