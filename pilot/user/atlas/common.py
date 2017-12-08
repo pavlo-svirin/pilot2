@@ -30,7 +30,7 @@ def get_payload_command(job):
     prepareasetup = should_pilot_prepare_asetup(job.get('noExecStrCnv', None), job['jobPars'])
 
     # Is it a user job or not?
-    userjob = is_user_analysis_job(job.get('trf', ''))
+    userjob = is_user_analysis_job(job['transformation'])
 
     # Get the platform value
     platform = get_platform(job['cmtConfig'])
@@ -71,7 +71,7 @@ def get_payload_command(job):
                 cmd += os.environ.get('PILOT_DB_LOCAL_SETUP_CMD', '')
                 # Add the transform and the job parameters (production jobs)
                 if prepareasetup:
-                    cmd += ";%s %s" % (job.get('trf', 'MISSING_TRF_FIELD'), job['jobPars'])  # throw exception if error
+                    cmd += ";%s %s" % (job['transformation'], job['jobPars'])
                 else:
                     cmd += "; " + job['jobPars']
 
