@@ -345,7 +345,7 @@ def retrieve(queues, traces, args):
     # get the job dispatcher dictionary
     data = get_dispatcher_dictionary(args)
 
-    timefloor = get_timefloor()
+    timefloor = 0  # get_timefloor()
     starttime = time.time()
 
     jobnumber = 0
