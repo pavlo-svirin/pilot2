@@ -71,6 +71,7 @@ def import_module(**kwargs):
                            '-r': kwargs.get('resource'),  # required
                            '-s': kwargs.get('site'),  # required
                            '-j': kwargs.get('job_label', 'ptest'),  # change default later to 'managed'
+                           '-i': kwargs.get('version_tag', 'PR'),
                            '--cacert': kwargs.get('cacert', None),
                            '--capath': kwargs.get('capath'),
                            '--url': kwargs.get('url', ''),
@@ -154,12 +155,6 @@ if __name__ == '__main__':
                             dest='version_tag',
                             default='PR',
                             help='Version tag (default: PR, optional: RC)')
-
-    arg_parser.add_argument('-z',
-                            dest='update_server',
-                            default=True,
-                            type=bool,
-                            help='Update server (default: True)')
 
     # SSL certificates
     arg_parser.add_argument('--cacert',
@@ -267,20 +262,6 @@ if __name__ == '__main__':
     # Set the pilot version
     environ['PILOT_VERSION'] = VERSION
 
-    # Establish logging
-    console = logging.StreamHandler(sys.stdout)
-    if args.debug:
-        logging.basicConfig(filename=config.Pilot.pilotlog, level=logging.DEBUG,
-                            format='%(asctime)s | %(levelname)-8s | %(threadName)-10s | %(name)-32s | %(funcName)-25s | %(message)s')
-        console.setLevel(logging.DEBUG)
-        console.setFormatter(logging.Formatter(
-            '%(asctime)s | %(levelname)-8s | %(threadName)-10s | %(name)-32s | %(funcName)-32s | %(message)s'))
-    else:
-        logging.basicConfig(filename=config.Pilot.pilotlog, level=logging.INFO,
-                            format='%(asctime)s | %(levelname)-8s | %(message)s')
-        console.setLevel(logging.INFO)
-        console.setFormatter(logging.Formatter('%(asctime)s | %(levelname)-8s | %(message)s'))
-    logging.Formatter.converter = time.gmtime
     logging.getLogger('').addHandler(console)
 
     trace = main()
