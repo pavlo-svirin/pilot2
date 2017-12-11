@@ -386,11 +386,6 @@ def _stage_out_all(job, args):
     """
     Order stage-out of all output files and the log file, or only the log file.
 
-    :param job:
-    :param args:
-    :return:
-    """
-
     log = logger.getChild(str(job['PandaID']))
     outputs = {}
 
