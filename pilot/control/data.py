@@ -415,7 +415,7 @@ def _stage_out_all(job, args):
         else:
             failed = True
 
-    log.info('infodict=%s'%str(infodict))
+    log.info('infodict=%s' % str(infodict))
     if failed:
         send_state(job, args, 'failed')
         return False
