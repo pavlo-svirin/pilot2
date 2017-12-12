@@ -337,8 +337,8 @@ def retrieve(queues, traces, args):
         getjob_requests += 1
 
         if not proceed_with_getjob(timefloor, starttime, jobnumber, getjob_requests):
-           args.graceful_stop.set()
-           break
+            args.graceful_stop.set()
+            break
 
         # get a job definition from a source (file or server)
         res = get_job_definition(args)
