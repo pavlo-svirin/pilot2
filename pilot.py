@@ -218,23 +218,11 @@ if __name__ == '__main__':
                             required=True,
                             help='Pilot user, e.g. name of experiment')
 
-    # Harvester specific options (if any of the following options are used, args.harvester will be set to True)
+    # Harvester specific options
     arg_parser.add_argument('--harvester-workdir',
                             dest='harvester_workdir',
                             default='',
                             help='Harvester work directory')
-    arg_parser.add_argument('--harvester-datadir',
-                            dest='harvester_datadir',
-                            default='',
-                            help='Harvester data directory')
-    arg_parser.add_argument('--harvester-eventstatusdump',
-                            dest='harvester_eventstatusdump',
-                            default='',
-                            help='Harvester event status dump json file')
-    arg_parser.add_argument('--harvester-workerattributes',
-                            dest='harvester_workerattributes',
-                            default='',
-                            help='Harvester worker attributes json file')
 
     args = arg_parser.parse_args()
 
