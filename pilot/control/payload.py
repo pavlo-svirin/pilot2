@@ -54,10 +54,6 @@ def control(queues, traces, args):
                                 kwargs={'queues': queues,
                                         'traces': traces,
                                         'args': args})]
-               threading.Thread(target=failed_post,
-                                kwargs={'queues': queues,
-                                        'traces': traces,
-                                        'args': args})]
     [t.start() for t in threads]
 
 
