@@ -285,7 +285,12 @@ def copytool_out(queues, traces, args):
 
             if _stage_out_all(job, args):
                 queues.finished_data_out.put(job)  # needed?
-                queues.finished_jobs.put(job)  # try this instead
+                if job['transExitCode'] == 0:
+                    logger.info('Finished stage-out for finished payload')
+                    queues.finished_jobs.put(job)
+                else:
+                    logger.info('Finished stage-out for failed payload')
+                    queues.failed_jobs.put(job)
             else:
                 queues.failed_data_out.put(job)
 
