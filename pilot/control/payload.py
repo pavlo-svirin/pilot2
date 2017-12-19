@@ -49,7 +49,10 @@ def control(queues, traces, args):
                                 kwargs={'queues': queues,
                                         'traces': traces,
                                         'args': args})]
-
+               threading.Thread(target=failed_post,
+                                kwargs={'queues': queues,
+                                        'traces': traces,
+                                        'args': args})]
     [t.start() for t in threads]
 
 
@@ -241,9 +244,11 @@ def execute_payloads(queues, traces, args):
             err.close()
 
             if exit_code == 0:
+                job['transExitCode'] = 0
                 queues.finished_payloads.put(job)
                 job['state'] = 'finished'
             else:
+                job['transExitCode'] = exit_code
                 queues.failed_payloads.put(job)
                 job['state'] = 'failed'
 
@@ -264,6 +269,7 @@ def validate_post(queues, traces, args):
     """
 
     while not args.graceful_stop.is_set():
+        # finished payloads
         try:
             job = queues.finished_payloads.get(block=True, timeout=1)
         except Queue.Empty:
@@ -277,7 +283,7 @@ def validate_post(queues, traces, args):
         queues.data_out.put(job)
 
 
-def dump_job_report(self, job, outputfilename):
+def dump_job_report(job, outputfilename):
     log = logger.getChild(str(job['PandaID']))
     log.debug('in dump_worker_attributes')
     job_report = None
@@ -382,8 +388,26 @@ def get_workdir_size():
         return o.split()[0]
     return None
 
-# if __name__ == "__main__":
-#    f = open("jobReport.json", "r")
-#    jr = json.load(f)
-#    f.close()
-#    pprint.pprint(parse_jobreport_data(jr))
+
+def failed_post(queues, traces, args):
+    """
+    (add description)
+
+    :param queues:
+    :param traces:
+    :param args:
+    :return:
+    """
+
+    while not args.graceful_stop.is_set():
+        # finished payloads
+        try:
+            failedjob = queues.failed_payloads.get(block=True, timeout=1)
+        except Queue.Empty:
+            continue
+        log = logger.getChild(str(job['PandaID']))
+
+        log.debug('adding jog for log stageout')
+
+        queues.data_out.put(job)
+# wrong queue??
