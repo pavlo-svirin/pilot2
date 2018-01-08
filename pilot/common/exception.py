@@ -27,7 +27,7 @@ class PilotException(Exception):
     def __init__(self, *args, **kwargs):
         super(PilotException, self).__init__(args, kwargs)
         self._errorCode = errors.UNKNOWNEXCEPTION
-        self._message = errors.get_error_message(self._errorCode)
+        self._message = "An unknown pilot exception occurred."
         self.args = args
         self.kwargs = kwargs
         self._error_string = None
@@ -63,7 +63,7 @@ class NotImplemented(PilotException):
     def __init__(self, *args, **kwargs):
         super(NotImplemented, self).__init__(args, kwargs)
         self._errorCode = errors.NOTIMPLEMENTED
-        self._message = errors.get_error_message(self._errorCode)
+        self._message = "The class or function is not implemented."
 
 
 class UnknownException(PilotException):
@@ -73,7 +73,7 @@ class UnknownException(PilotException):
     def __init__(self, *args, **kwargs):
         super(UnknownException, self).__init__(args, kwargs)
         self._errorCode = errors.UNKNOWNEXCEPTION
-        self._message = errors.get_error_message(self._errorCode)
+        self._message = "An unknown pilot exception has occurred."
 
 
 class NoLocalSpace(PilotException):
