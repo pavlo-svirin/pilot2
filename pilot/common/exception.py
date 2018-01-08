@@ -92,8 +92,8 @@ class StageInFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(StageInFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.STAGEINFAILED
-        self._message = errors.get_error_message(self._errorCode)
+        self._errorCode = 1099
+        self._message = "Failed to stage-in file."
 
 
 class StageOutFailure(PilotException):
@@ -102,8 +102,8 @@ class StageOutFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(StageOutFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.STAGEOUTFAILED
-        self._message = errors.get_error_message(self._errorCode)
+        self._errorCode = 1137
+        self._message = "Failed to stage-out file."
 
 
 class SetupFailure(PilotException):
@@ -132,8 +132,8 @@ class MessageFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(MessageFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.MESSAGEHANDLINGFAILURE
-        self._message = errors.get_error_message(self._errorCode)
+        self._errorCode = 1112
+        self._message = "Failed to handle message from payload."
 
 
 class FileHandlingFailure(PilotException):
