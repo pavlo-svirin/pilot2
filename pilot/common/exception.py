@@ -27,7 +27,7 @@ class PilotException(Exception):
     def __init__(self, *args, **kwargs):
         super(PilotException, self).__init__(args, kwargs)
         self._errorCode = errors.UNKNOWNEXCEPTION
-        self._message = "An unknown pilot exception occurred."
+        self._message = errors.get_error_message(self._errorCode)
         self.args = args
         self.kwargs = kwargs
         self._error_string = None
@@ -63,7 +63,7 @@ class NotImplemented(PilotException):
     def __init__(self, *args, **kwargs):
         super(NotImplemented, self).__init__(args, kwargs)
         self._errorCode = errors.NOTIMPLEMENTED
-        self._message = "The class or function is not implemented."
+        self._message = errors.get_error_message(self._errorCode)
 
 
 class UnknownException(PilotException):
@@ -73,7 +73,7 @@ class UnknownException(PilotException):
     def __init__(self, *args, **kwargs):
         super(UnknownException, self).__init__(args, kwargs)
         self._errorCode = errors.UNKNOWNEXCEPTION
-        self._message = "An unknown pilot exception has occurred."
+        self._message = errors.get_error_message(self._errorCode)
 
 
 class NoLocalSpace(PilotException):
@@ -82,7 +82,7 @@ class NoLocalSpace(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(NoLocalSpace, self).__init__(args, kwargs)
-        self._errorCode = errors.NOLOCALSPACE
+        self._errorCode = 1098
         self._message = errors.get_error_message(self._errorCode)
 
 
@@ -93,7 +93,7 @@ class StageInFailure(PilotException):
     def __init__(self, *args, **kwargs):
         super(StageInFailure, self).__init__(args, kwargs)
         self._errorCode = 1099
-        self._message = "Failed to stage-in file."
+        self._message = errors.get_error_message(self._errorCode)
 
 
 class StageOutFailure(PilotException):
@@ -103,7 +103,7 @@ class StageOutFailure(PilotException):
     def __init__(self, *args, **kwargs):
         super(StageOutFailure, self).__init__(args, kwargs)
         self._errorCode = 1137
-        self._message = "Failed to stage-out file."
+        self._message = errors.get_error_message(self._errorCode)
 
 
 class SetupFailure(PilotException):
@@ -112,7 +112,7 @@ class SetupFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(SetupFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.SETUPFAILURE
+        self._errorCode = 1110
         self._message = errors.get_error_message(self._errorCode)
 
 
@@ -122,7 +122,7 @@ class RunPayloadFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(RunPayloadFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.PAYLOADEXECUTIONFAILURE
+        self._errorCode = 1111
         self._message = errors.get_error_message(self._errorCode)
 
 
@@ -133,7 +133,7 @@ class MessageFailure(PilotException):
     def __init__(self, *args, **kwargs):
         super(MessageFailure, self).__init__(args, kwargs)
         self._errorCode = 1112
-        self._message = "Failed to handle message from payload."
+        self._message = errors.get_error_message(self._errorCode)
 
 
 class FileHandlingFailure(PilotException):
@@ -142,7 +142,7 @@ class FileHandlingFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(FileHandlingFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.FILEHANDLINGFAILURE
+        self._errorCode = 1999
         self._message = errors.get_error_message(self._errorCode)
 
 
@@ -152,7 +152,7 @@ class ConversionFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(ConversionFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.CONVERSIONFAILURE
+        self._errorCode = 1998
         self._message = errors.get_error_message(self._errorCode)
 
 
@@ -162,5 +162,5 @@ class MKDirFailure(PilotException):
     """
     def __init__(self, *args, **kwargs):
         super(MKDirFailure, self).__init__(args, kwargs)
-        self._errorCode = errors.MKDIR
+        self._errorCode = 1997
         self._message = errors.get_error_message(self._errorCode)
