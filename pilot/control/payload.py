@@ -19,7 +19,7 @@ import time
 from collections import defaultdict
 
 from pilot.control.job import send_state
-from pilot.util.container import execute
+# from pilot.util.container import execute
 
 import logging
 
