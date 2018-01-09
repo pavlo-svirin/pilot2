@@ -20,7 +20,7 @@ from collections import defaultdict
 
 from pilot.control.payloads import generic, eventservice
 from pilot.control.job import send_state
-# from pilot.util.container import execute
+from pilot.util.container import execute
 
 import logging
 
