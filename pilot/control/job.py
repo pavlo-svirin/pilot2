@@ -91,9 +91,6 @@ def send_state(job, args, state, xml=None):
     # report the batch system job id, if available
     batchsystem_type, batchsystem_id = get_batchsystem_jobid()
 
-    # report the batch system job id, if available
-    batchsystem_type, batchsystem_id = get_batchsystem_jobid()
-
     data = {'jobId': job['PandaID'],
             'state': state,
             'timestamp': time_stamp(),
