@@ -8,7 +8,9 @@
 # - Daniel Drizhuk, d.drizhuk@gmail.com, 2017
 # - Paul Nilsson, paul.nilsson@cern.ch, 2017
 
-# NOTE: this component should be tied to the job, its thread should live and die with the job (rename to job monitor?)
+# NOTE: this module should deal with non-job related monitoring, such as thread monitoring. Job monitoring should
+#       be the task of the job_monitor thread in the Job component. Job related functions should be moved to the
+#       Job component, with the exception of the heartbeat function.
 
 import logging
 import os
@@ -58,10 +60,11 @@ def send_heartbeat(job):
     pass
 
 
-def check_local_space_limit():  # move to Job component?
+def check_local_space_limit():  # move to Job component
     du = disk_usage(os.path.abspath("."))
     return du[2] < human2bytes(config.Pilot.free_space_limit)
 
 
 def check_output_file_sizes():  # move to Job component
     return True
+
