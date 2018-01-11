@@ -368,13 +368,16 @@ def retrieve(queues, traces, args):
                 else:
                     logger.info('graceful stop is currently not set')
                 while not args.graceful_stop.is_set():
+                    if args.retrieve_next_job:
+                        logger.info('will retrieve another job')
+                        break
                     if job_has_finished(queues):
                         logger.info('graceful stop has been set')
                         break
                     time.sleep(0.5)
 
 
-def job_has_finished(queues):
+def job_has_finished(queues):  # DEPRECATED
     """
     Has the current payload finished?
     :param queues:
@@ -392,3 +395,23 @@ def job_has_finished(queues):
         status = True
 
     return status
+
+
+def job_monitor(queues, traces, args):
+    """
+    Monitoring of job parameters.
+    This function monitors certain job parameters, such as job looping. It also monitors queue activity, specifically
+    if a job has finished or failed and then reports to the server.
+
+    :param queues:
+    :param traces:
+    :param args:
+    :return:
+    """
+
+    while not args.graceful_stop.is_set():
+        # wait a second
+        if args.graceful_stop.wait(1) or args.graceful_stop.is_set():  # 'or' added for 2.6 compatibility reasons
+            break
+
+        # check if the job has finished
