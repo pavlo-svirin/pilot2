@@ -285,8 +285,8 @@ def copytool_out(queues, traces, args):
             # send_state(job, args, 'running')  # not necessary to send job update at this point?
 
             if _stage_out_all(job, args):
-                queues.finished_data_out.put(job)  # needed?
-                if job['transExitCode'] == 0:
+                queues.finished_data_out.put(job)
+                if job['transExitCode'] == 0:  # move to queue_monitor()
                     logger.info('Finished stage-out for finished payload')
                     queues.finished_jobs.put(job)
                 else:
@@ -511,47 +511,14 @@ def queue_monitoring(queues, traces, args):
     :return:
     """
 
-    while not args.graceful_stop.is_set():
-        # wait a second
-        if args.graceful_stop.wait(1) or args.graceful_stop.is_set():  # 'or' added for 2.6 compatibility reasons
-            break
+    # wait a second
+    if args.graceful_stop.wait(1) or args.graceful_stop.is_set():  # 'or' added for 2.6 compatibility reasons
+        break
 
-        # monitor the failed_data_in queue
-        try:
-            job = queues.failed_data_in.get(block=True, timeout=1)
-        except Queue.Empty:
-            pass
-        else:
-            # stage-out log file then add the job to the failed_jobs queue
-            job['stageout'] = "log"
-            if not _stage_out_all(job, args):
-                logger.info("job %d failed during stage-in and stage-out of log, adding job object to failed_data_outs "
-                            "queue" % job['PandaID'])
-                queues.failed_data_out.put(job)
-            else:
-                logger.info("job %d failed during stage-in, adding job object to failed_jobs queue" % job['PandaID'])
-                queues.failed_jobs.put(job)
-
-        # monitor the finished_data_out queue
-        try:
-            job = queues.finished_data_out.get(block=True, timeout=1)
-        except Queue.Empty:
-            pass
-        else:
-            # if ('transExitCode' in job and job['transExitCode'] == 0):  # need to extract exeErrorCode from jobReport
-            if ('transExitCode' in job and job['transExitCode'] == 0) and\
-                    ('exeErrorCode' in job and job['exeErrorCode'] == 0):
-                logger.info('finished stage-out for finished payload, adding job to finished_jobs queue')
-                queues.finished_jobs.put(job)
-            else:
-                logger.info('finished stage-out (of log) for failed payload')
-                queues.failed_jobs.put(job)
-
-        # monitor the failed_data_out queue
-        try:
-            job = queues.failed_data_out.get(block=True, timeout=1)
-        except Queue.Empty:
-            pass
-        else:
-            logger.info("job %d failed during stage-out, adding job object to failed_jobs queue" % job['PandaID'])
-            queues.failed_jobs.put(job)
+    #
+    try:
+        job = queues.failed_data_in.get(block=True, timeout=1)
+    except Queue.Empty:
+        pass
+    else:
+        logger.info("job %d failed during stage-in" % job['PandaID'])
