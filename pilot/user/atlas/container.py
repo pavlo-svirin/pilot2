@@ -36,28 +36,17 @@ def wrapper(executable, **kwargs):
     return singularity_wrapper(executable, platform, workdir)
 
 
-def use_payload_container(job):
+def use_payload_container(jobPars):
     pass
 
+def extract_payload_container(jobPars):
+    pass
 
 def use_middleware_container():
-    """
-    Should middleware from container be used?
-    In case middleware, i.e. the copy command for stage-in/out, should be taken from a container this function should
-    return True.
-
-    :return: True if middleware should be taken from container. False otherwise.
-    """
-
-    if get_middleware_type() == 'container':
-        return True
-    else:
-        return False
-
+    pass
 
 def get_middleware_container():
     pass
-
 
 def extract_container_options():
     """ Extract any singularity options from catchall """
