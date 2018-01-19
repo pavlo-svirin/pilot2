@@ -17,7 +17,6 @@ import subprocess
 import tarfile
 import threading
 import time
-from json import dumps
 
 from pilot.control.job import send_state
 from pilot.common.errorcodes import ErrorCodes
@@ -268,7 +267,8 @@ def copytool_in(queues, traces, args):
                 queues.failed_data_in.put(job)
                 job['pilotErrorCode'] = errors.STAGEINFAILED
                 job['pilotErrorDiag'] = errors.get_error_message(job['pilotErrorCode'])
-                send_state(job, args, 'failed')
+                job['state'] = "failed"
+                # send_state(job, args, 'failed')
 
         except Queue.Empty:
             continue
@@ -384,7 +384,7 @@ def _stage_out(args, outfile, job):
 
 def _stage_out_all(job, args):
     """
-    Order stage-out of all output files or only the log file.
+    Order stage-out of all output files and the log file, or only the log file.
 
     :param job:
     :param args:
@@ -394,12 +394,10 @@ def _stage_out_all(job, args):
     log = logger.getChild(str(job['PandaID']))
     outputs = {}
 
-    if job.stageout == 'log':
+    if job['stageout'] == 'log':
         log.info('will stage-out log file')
-        outputs['%s:%s' % (job['scopeLog'], job['logFile'])] = prepare_log(job, 'tarball_PandaJob_%s_%s' %
-                                                                           (job['PandaID'], args.queue))
     else:
-        log.info('will stage-out all output files')
+        log.info('will stage-out all output files and log file')
         if 'job_report' in job:
             for f in job['job_report']['files']['output']:
                 outputs[f['subFiles'][0]['name']] = {'scope': job['scopeOut'],
@@ -408,6 +406,8 @@ def _stage_out_all(job, args):
                                                      'bytes': f['subFiles'][0]['file_size']}
         else:
             log.warning('Job object does not contain a job report (payload failed?) - will only stage-out log file')
+    outputs['%s:%s' % (job['scopeLog'], job['logFile'])] = prepare_log(job, 'tarball_PandaJob_%s_%s' %
+                                                                       (job['PandaID'], args.queue))
 
     fileinfodict = {}
     failed = False
@@ -432,73 +432,10 @@ def _stage_out_all(job, args):
         # set error code + message
         job['pilotErrorCode'] = errors.STAGEOUTFAILED
         job['pilotErrorDiag'] = errors.get_error_message(job['pilotErrorCode'])
-        send_state(job, args, 'failed')
-        return False
-    else:
-        job['fileinfodict'] = fileinfodict
-        # send final server update since all transfers have finished correctly
-        if stageoutlog:  # remove after testing log stage-out - finished message should be sent elsewhere (payload ctrl)
-            send_state(job, args, 'finished', xml=dumps(fileinfodict))
-        return True
-
-
-def _stage_out_all_old(job, args):
-
-    outputs = {}
-
-    for f in job['job_report']['files']['output']:
-        outputs[f['subFiles'][0]['name']] = {'scope': job['scopeOut'],
-                                             'name': f['subFiles'][0]['name'],
-                                             'guid': f['subFiles'][0]['file_guid'],
-                                             'bytes': f['subFiles'][0]['file_size']}
-
-    outputs['%s:%s' % (job['scopeLog'], job['logFile'])] = prepare_log(job, 'tarball_PandaJob_%s_%s' % (job['PandaID'], args.queue))
-
-    pfc = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<!DOCTYPE POOLFILECATALOG SYSTEM "InMemory">
-<POOLFILECATALOG>'''
-
-    pfc_file = '''
- <File ID="{guid}">
-  <logical>
-   <lfn name="{name}"/>
-  </logical>
-  <metadata att_name="surl" att_value="{pfn}"/>
-  <metadata att_name="fsize" att_value="{bytes}"/>
-  <metadata att_name="adler32" att_value="{adler32}"/>
- </File>
-'''
-
-    fileinfodict = {}
-    failed = False
-
-    for outfile in outputs:
-        summary = _stage_out(args, outputs[outfile], job)
-
-        if summary is not None:
-            outputs[outfile]['pfn'] = summary['%s:%s' % (outputs[outfile]['scope'], outputs[outfile]['name'])]['pfn']
-            outputs[outfile]['adler32'] = summary['%s:%s' % (outputs[outfile]['scope'],
-                                                             outputs[outfile]['name'])]['adler32']
-
-            filedict = {'guid': outputs[outfile]['guid'],
-                        'fsize': outputs[outfile]['bytes'],
-                        'adler32': outputs[outfile]['adler32'],
-                        'surl': outputs[outfile]['pfn']}
-            fileinfodict[outputs[outfile]['name']] = filedict
-        else:
-            failed = True
-
-    if failed:
-        # set error code + message
-        job['pilotErrorCodes'], job['pilotErrorDiags'] = errors.add_error_code(errors.STAGEOUTFAILED)
         job['state'] = "failed"
-        log.warning('stage-out failed')  # with error: %d, %s (setting job state to failed)' %
-        # log.warning('stage-out failed with error: %d, %s (setting job state to failed)' %
-        #  (job['pilotErrorCode'], job['pilotErrorDiag']))
         # send_state(job, args, 'failed')
         return False
     else:
-        log.info('stage-out finished correctly (setting job state to finished)')
         job['fileinfodict'] = fileinfodict
         job['state'] = "finished"
 
@@ -528,8 +465,15 @@ def queue_monitoring(queues, traces, args):
         except Queue.Empty:
             pass
         else:
-            logger.info("job %d failed during stage-in, adding job object to failed_jobs queue" % job['PandaID'])
-            queues.failed_jobs.put(job)
+            # stage-out log file then add the job to the failed_jobs queue
+            job['stageout'] = "log"
+            if not _stage_out_all(job, args):
+                logger.info("job %d failed during stage-in and stage-out of log, adding job object to failed_data_outs "
+                            "queue" % job['PandaID'])
+                queues.failed_data_out.put(job)
+            else:
+                logger.info("job %d failed during stage-in, adding job object to failed_jobs queue" % job['PandaID'])
+                queues.failed_jobs.put(job)
 
         # monitor the finished_data_out queue
         try:
