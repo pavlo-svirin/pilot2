@@ -7,10 +7,10 @@
 # Authors:
 # - Paul Nilsson, paul.nilsson@cern.ch, 2018
 
-from os import environ, remove
+from os import environ
 from os.path import exists, join
 
-from pilot.util.filehandling import write_json
+from pilot.util.filehandling import read_json, write_json
 from pilot.util.config import config
 from pilot.common.exception import FileHandlingFailure
 
@@ -18,47 +18,28 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_job_request_file_name():
+def add_id_and_state_to_json(pandaid, state):
     """
-    Return the name of the job request file as defined in the pilot config file.
+    Add PanDA id and final job state to Harvester dictionary.
 
-    :return: job request file name.
-    """
-
-    return join(environ['PILOT_HOME'], config.Harvester.job_request_file)
-
-
-def remove_job_request_file():
-    """
-    Remove an old job request file when it is no longer needed.
-
+    :param pandaid:
     :return:
     """
 
-    path = get_job_request_file_name()
-    try:
-        remove(path)
-    except OSError as e:
-        if exists(path):
-            logger.warning('failed to remove %s: %s' % (path, e))
-        else:
-            pass
+    # get the Harvester json if it already exists
+    path = join(environ['PILOT_HOME'], config.Harvester.completed_pandaids)
+    if not exists(path):
+        dictionary = {}
     else:
-        logger.info('removed %s' % path)
+        try:
+            dictionary = read_json(path)
+        except FileHandlingFailure:
+            raise FileHandlingFailure
+        except ConversionFailure:
+            raise ConversionFailure
 
-
-def request_new_jobs(njobs=1):
-    """
-    Inform Harvester that the pilot is ready to process new jobs by creating a job request file with the desired
-    number of jobs.
-
-    :param njobs: Number of jobs. Default is 1 since on grids and clouds the pilot does not know how many jobs it can
-    process before it runs out of time.
-    :return:
-    """
-
-    path = get_job_request_file_name()
-    dictionary = {'nJobs': njobs}
+    # add the new pandaid and its state
+    dictionary[pandaid] = state
 
     # write it to file
     try:
