@@ -236,4 +236,3 @@ def failed_post(queues, traces, args):
 
         job['stageout'] = "log"  # only stage-out log file
         queues.data_out.put(job)
-# wrong queue??
