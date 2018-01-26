@@ -21,6 +21,7 @@ from collections import defaultdict
 from pilot.control import payloads
 from pilot.control.job import send_state
 from pilot.util.container import execute
+from pilot.util.config import config
 
 import logging
 
