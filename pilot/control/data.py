@@ -20,7 +20,6 @@ import time
 
 from pilot.control.job import send_state
 from pilot.common.errorcodes import ErrorCodes
-errors = ErrorCodes()
 
 import logging
 
