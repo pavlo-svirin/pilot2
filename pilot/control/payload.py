@@ -259,3 +259,93 @@ def validate_post(queues, traces, args):
             job['job_report'] = json.load(data_file)
 
         queues.data_out.put(job)
+
+
+def dump_jobreport(self, job, outputfilename):
+        log.debug('in dump_worker_attributes')
+        # Harvester only expects the attributes files for certain states.
+        #if self.__state in ['finished','failed','running']:
+	# with open(self.pilot.args.harvester_workerAttributesFile,'w') as outputfile:
+	with open(outputfilename,'w') as outputfile:
+	    workAttributes = {'jobStatus' : self.state}
+	    workAttributes['workdir'] = job['working_dir']
+	    ## workAttributes['messageLevel'] = logging.getLevelName(log.getEffectiveLevel())
+	    workAttributes['timestamp'] = timeStamp()
+	    workAttributes['cpuConversionFactor'] = 1.0
+	    
+	    coreCount = None
+	    nEvents = None
+	    dbTime = None
+	    dbData = None
+	    workDirSize = None
+
+	    if 'ATHENA_PROC_NUMBER' in os.environ:
+		 workAttributes['coreCount'] = os.environ['ATHENA_PROC_NUMBER']
+		 coreCount = os.environ['ATHENA_PROC_NUMBER']
+
+	    # check if job report json file exists
+	    jobReport = None
+	    readJsonPath=os.path.join(job['working_dir'], "jobReport.json")
+	    log.debug('parsing %s' % readJsonPath)
+	    if os.path.exists(readJsonPath):
+		# load json                                                                                                                                       
+		with open(readJsonPath) as jsonFile:
+		    jobReport = json.load(jsonFile)
+	    if jobReport is not None:
+		if 'resource' in jobReport:
+		    if 'transform' in jobReport['resource']:
+			if 'processedEvents' in jobReport['resource']['transform']:
+			    workAttributes['nEvents'] = jobReport['resource']['transform']['processedEvents']
+			    nEvents = jobReport['resource']['transform']['processedEvents']
+			if 'cpuTimeTotal' in jobReport['resource']['transform']:
+			    workAttributes['cpuConsumptionTime'] = jobReport['resource']['transform']['cpuTimeTotal']
+			
+		    if 'machine' in jobReport['resource']:
+			if 'node' in jobReport['resource']['machine']:
+			    workAttributes['node'] = jobReport['resource']['machine']['node']
+			if 'model_name' in jobReport['resource']['machine']:
+			    workAttributes['cpuConsumptionUnit'] = jobReport['resource']['machine']['model_name']
+		    
+		    if 'dbTimeTotal' in jobReport['resource']:
+			dbTime = jobReport['resource']['dbTimeTotal']
+		    if 'dbDataTotal' in jobReport['resource']:
+			dbData = jobReport['resource']['dbDataTotal']
+
+		    if 'executor' in jobReport['resource']:
+			if 'memory' in jobReport['resource']['executor']:
+			    for transform_name,attributes in jobReport['resource']['executor'].iteritems():
+				if 'Avg' in attributes['memory']:
+				    for name,value in attributes['memory']['Avg'].iteritems():
+					try:
+					    workAttributes[name] += value
+					except:
+					    workAttributes[name] = value
+				if 'Max' in attributes['memory']:
+				    for name,value in attributes['memory']['Max'].iteritems():
+					try:
+					    workAttributes[name] += value
+					except:
+					    workAttributes[name] = value
+			
+		if 'exitCode' in jobReport: 
+		    workAttributes['transExitCode'] = jobReport['exitCode']
+		    workAttributes['exeErrorCode'] = jobReport['exitCode']
+		if 'exitMsg'  in jobReport: 
+		    workAttributes['exeErrorDiag'] = jobReport['exitMsg']
+		if 'files' in jobReport:
+		    if 'input' in jobReport['files']:
+			if 'subfiles' in jobReport['files']['input']:
+			    workAttributes['nInputFiles'] = len(jobReport['files']['input']['subfiles'])
+
+		if coreCount and nEvents and dbTime and dbData:
+		    c,o,e = self.call('du -s',shell=True)
+		    workAttributes['jobMetrics'] = 'coreCount=%s nEvents=%s dbTime=%s dbData=%s workDirSize=%s' % (
+			  coreCount,nEvents,dbTime,dbData,o.split()[0] )
+
+	    else:
+		log.debug('no jobReport object')
+	    log.info('output worker attributes for Harvester: %s' % workAttributes)
+	    json.dump(workAttributes,outputfile)
+        #else:
+        #    log.debug(' %s is not a good state' % self.state)
+        log.debug('exit dump worker attributes')
