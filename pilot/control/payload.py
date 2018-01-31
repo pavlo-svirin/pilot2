@@ -261,91 +261,94 @@ def validate_post(queues, traces, args):
         queues.data_out.put(job)
 
 
-def dump_jobreport(self, job, outputfilename):
+def dump_job_report(self, job, outputfilename):
+        log = logger.getChild(str(job['PandaID']))
         log.debug('in dump_worker_attributes')
         # Harvester only expects the attributes files for certain states.
-        #if self.__state in ['finished','failed','running']:
-	# with open(self.pilot.args.harvester_workerAttributesFile,'w') as outputfile:
-	with open(outputfilename,'w') as outputfile:
-	    workAttributes = {'jobStatus' : self.state}
-	    workAttributes['workdir'] = job['working_dir']
-	    ## workAttributes['messageLevel'] = logging.getLevelName(log.getEffectiveLevel())
-	    workAttributes['timestamp'] = timeStamp()
-	    workAttributes['cpuConversionFactor'] = 1.0
-	    
-	    coreCount = None
-	    nEvents = None
-	    dbTime = None
-	    dbData = None
-	    workDirSize = None
+        # if self.__state in ['finished','failed','running']:
+        # with open(self.pilot.args.harvester_workerAttributesFile,'w') as outputfile:
+        with open(outputfilename, 'w') as outputfile:
+            work_attributes = {'jobStatus': self.state}
+            work_attributes['workdir'] = job['working_dir']
+            # # work_attributes['messageLevel'] = logging.getLevelName(log.getEffectiveLevel())
+            # work_attributes['timestamp'] = timeStamp()
+            # no idea which format is needed for timestamp, guessing
+            work_attributes['timestamp'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+            work_attributes['cpuConversionFactor'] = 1.0
 
-	    if 'ATHENA_PROC_NUMBER' in os.environ:
-		 workAttributes['coreCount'] = os.environ['ATHENA_PROC_NUMBER']
-		 coreCount = os.environ['ATHENA_PROC_NUMBER']
+            core_count = None
+            n_events = None
+            db_time = None
+            db_data = None
+            # workdir_size = None
 
-	    # check if job report json file exists
-	    jobReport = None
-	    readJsonPath=os.path.join(job['working_dir'], "jobReport.json")
-	    log.debug('parsing %s' % readJsonPath)
-	    if os.path.exists(readJsonPath):
-		# load json                                                                                                                                       
-		with open(readJsonPath) as jsonFile:
-		    jobReport = json.load(jsonFile)
-	    if jobReport is not None:
-		if 'resource' in jobReport:
-		    if 'transform' in jobReport['resource']:
-			if 'processedEvents' in jobReport['resource']['transform']:
-			    workAttributes['nEvents'] = jobReport['resource']['transform']['processedEvents']
-			    nEvents = jobReport['resource']['transform']['processedEvents']
-			if 'cpuTimeTotal' in jobReport['resource']['transform']:
-			    workAttributes['cpuConsumptionTime'] = jobReport['resource']['transform']['cpuTimeTotal']
-			
-		    if 'machine' in jobReport['resource']:
-			if 'node' in jobReport['resource']['machine']:
-			    workAttributes['node'] = jobReport['resource']['machine']['node']
-			if 'model_name' in jobReport['resource']['machine']:
-			    workAttributes['cpuConsumptionUnit'] = jobReport['resource']['machine']['model_name']
-		    
-		    if 'dbTimeTotal' in jobReport['resource']:
-			dbTime = jobReport['resource']['dbTimeTotal']
-		    if 'dbDataTotal' in jobReport['resource']:
-			dbData = jobReport['resource']['dbDataTotal']
+            if 'ATHENA_PROC_NUMBER' in os.environ:
+                work_attributes['core_count'] = os.environ['ATHENA_PROC_NUMBER']
+                core_count = os.environ['ATHENA_PROC_NUMBER']
 
-		    if 'executor' in jobReport['resource']:
-			if 'memory' in jobReport['resource']['executor']:
-			    for transform_name,attributes in jobReport['resource']['executor'].iteritems():
-				if 'Avg' in attributes['memory']:
-				    for name,value in attributes['memory']['Avg'].iteritems():
-					try:
-					    workAttributes[name] += value
-					except:
-					    workAttributes[name] = value
-				if 'Max' in attributes['memory']:
-				    for name,value in attributes['memory']['Max'].iteritems():
-					try:
-					    workAttributes[name] += value
-					except:
-					    workAttributes[name] = value
-			
-		if 'exitCode' in jobReport: 
-		    workAttributes['transExitCode'] = jobReport['exitCode']
-		    workAttributes['exeErrorCode'] = jobReport['exitCode']
-		if 'exitMsg'  in jobReport: 
-		    workAttributes['exeErrorDiag'] = jobReport['exitMsg']
-		if 'files' in jobReport:
-		    if 'input' in jobReport['files']:
-			if 'subfiles' in jobReport['files']['input']:
-			    workAttributes['nInputFiles'] = len(jobReport['files']['input']['subfiles'])
+            # check if job report json file exists
+            job_report = None
+            jobreport_path = os.path.join(job['working_dir'], "job_report.json")
+            log.debug('parsing %s' % jobreport_path)
+            if os.path.exists(jobreport_path):
+                # load json
+                with open(jobreport_path) as jsonFile:
+                    job_report = json.load(jsonFile)
+            if job_report is not None:
+                if 'resource' in job_report:
+                    if 'transform' in job_report['resource']:
+                        if 'processedEvents' in job_report['resource']['transform']:
+                            work_attributes['n_events'] = job_report['resource']['transform']['processedEvents']
+                            n_events = job_report['resource']['transform']['processedEvents']
+                        if 'cpuTimeTotal' in job_report['resource']['transform']:
+                            work_attributes['cpuConsumptionTime'] = job_report['resource']['transform']['cpuTimeTotal']
+                    if 'machine' in job_report['resource']:
+                        if 'node' in job_report['resource']['machine']:
+                            work_attributes['node'] = job_report['resource']['machine']['node']
+                        if 'model_name' in job_report['resource']['machine']:
+                            work_attributes['cpuConsumptionUnit'] = job_report['resource']['machine']['model_name']
+                    if 'db_timeTotal' in job_report['resource']:
+                        db_time = job_report['resource']['db_timeTotal']
+                    if 'db_dataTotal' in job_report['resource']:
+                        db_data = job_report['resource']['db_dataTotal']
 
-		if coreCount and nEvents and dbTime and dbData:
-		    c,o,e = self.call('du -s',shell=True)
-		    workAttributes['jobMetrics'] = 'coreCount=%s nEvents=%s dbTime=%s dbData=%s workDirSize=%s' % (
-			  coreCount,nEvents,dbTime,dbData,o.split()[0] )
+                    if 'executor' in job_report['resource']:
+                        if 'memory' in job_report['resource']['executor']:
+                            for transform_name, attributes in job_report['resource']['executor'].iteritems():
+                                if 'Avg' in attributes['memory']:
+                                    for name, value in attributes['memory']['Avg'].iteritems():
+                                        if name in work_attributes:
+                                            work_attributes[name] += value
+                                        else:
+                                            work_attributes[name] = value
+                                if 'Max' in attributes['memory']:
+                                    for name, value in attributes['memory']['Max'].iteritems():
+                                        if name in work_attributes:
+                                            work_attributes[name] += value
+                                        else:
+                                            work_attributes[name] = value
+                if 'exitCode' in job_report:
+                    work_attributes['transExitCode'] = job_report['exitCode']
+                    work_attributes['exeErrorCode'] = job_report['exitCode']
+                if 'exitMsg' in job_report:
+                    work_attributes['exeErrorDiag'] = job_report['exitMsg']
+                if 'files' in job_report:
+                    if 'input' in job_report['files']:
+                        if 'subfiles' in job_report['files']['input']:
+                            work_attributes['nInputFiles'] = len(job_report['files']['input']['subfiles'])
 
-	    else:
-		log.debug('no jobReport object')
-	    log.info('output worker attributes for Harvester: %s' % workAttributes)
-	    json.dump(workAttributes,outputfile)
-        #else:
+                if core_count and n_events and db_time and db_data:
+                    c, o, e = self.call('du -s', shell=True)
+                    work_attributes['jobMetrics'] = 'core_count=%s n_events=%s db_time=%s db_data=%s workdir_size=%s' % (core_count,
+                                                                                                                         n_events,
+                                                                                                                         db_time,
+                                                                                                                         db_data,
+                                                                                                                         o.split()[0])
+
+            else:
+                log.debug('no job_report object')
+            log.info('output worker attributes for Harvester: %s' % work_attributes)
+            json.dump(work_attributes, outputfile)
+        # else:
         #    log.debug(' %s is not a good state' % self.state)
         log.debug('exit dump worker attributes')
