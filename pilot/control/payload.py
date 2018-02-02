@@ -18,7 +18,8 @@ import threading
 import time
 from collections import defaultdict
 
-from pilot.control.payloads import eventservice, generic
+import pilot.control.payloads.eventservice
+import pilot.control.payloads.generic
 from pilot.control.job import send_state
 from pilot.util.config import config
 
