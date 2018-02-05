@@ -155,6 +155,7 @@ def execute_payloads(queues, traces, args):
             t1 = os.times()
             t = map(lambda x, y: x - y, t1, t0)
             job['cpuConsumptionUnit'], job['cpuConsumptionTime'], job['cpuConversionFactor'] = set_time_consumed(t)
+            log.info('CPU consumption time: %s' % job['cpuConsumptionTime'])
 
             out.close()
             err.close()
