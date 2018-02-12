@@ -170,8 +170,6 @@ def execute_payloads(queues, traces, args):
                 queues.failed_payloads.put(job)
                 job['state'] = 'failed'
 
-            dump_job_report(job, 'job_report_dump.json')
-
         except Queue.Empty:
             continue
 
@@ -191,6 +189,7 @@ def process_job_report(job):
     with open(os.path.join(job['working_dir'], config.Payload.jobreport)) as data_file:
         # compulsory field; the payload must procude a job report (see config file for file name)
         job['metaData'] = json.load(data_file)
+        parse_jobreport_data(job['metaData'])
 
         # extract user specific info from job report
         pilot_user = os.environ.get('PILOT_USER', 'generic').lower()
