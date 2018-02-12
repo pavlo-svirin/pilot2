@@ -203,11 +203,18 @@ def validate(queues, traces, args):
                     queues.failed_jobs.put(job)
                     break
 
-                queues.validated_jobs.put(job)
-            else:
-                queues.failed_jobs.put(job)
-        except Exception as e:
-            log.fatal('caught exception: %s' % e)
+            log.debug('symlinking pilot log')
+            try:
+                os.symlink('../pilotlog.txt', os.path.join(job_dir, 'pilotlog.txt'))
+            except Exception as e:
+                log.debug('cannot symlink pilot log: %s' % str(e))
+                #queues.failed_jobs.put(job)
+                #break
+
+            queues.validated_jobs.put(job)
+        else:
+            log.debug('Failed to validate job=%s' % job['PandaID'])
+            queues.failed_jobs.put(job)
 
 
 def create_data_payload(queues, traces, args):
