@@ -21,6 +21,7 @@ from collections import defaultdict
 from pilot.control.payloads import generic, eventservice
 from pilot.control.job import send_state
 from pilot.util.config import config
+from pilot.util.container import execute
 
 import logging
 
@@ -325,7 +326,7 @@ def parse_jobreport_data(job_report):
 
 
 def get_workdir_size():
-    c, o, e = pilot.util.container.execute('du -s', shell=True)
+    c, o, e = execute('du -s', shell=True)
     if o is not None:
         return o.split()[0]
     return None
